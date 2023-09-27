@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  fastapi-service-checker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      TELEGRAM_TOKEN: your_telegram_token
+      CHAT_ID: your_chat_id_as_string
