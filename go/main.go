@@ -73,11 +73,11 @@ func main() {
 
 	c := cron.New()
 	c.AddFunc("@every 1m", func() {
-		for _, services := range vpsServers {
+		for vpsName, services := range vpsServers {
 			for _, url := range services {
 				status := checkServiceStatus(url)
 				if failedCounts[url] >= 3 {
-					msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Service %s is down! From %s", url, services))
+					msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Service %s is down! From %s", url, vpsName))
 					bot.Send(msg)
 					mtx.Lock()
 					failedCounts[url] = 0
