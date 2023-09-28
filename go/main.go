@@ -25,7 +25,7 @@ var vpsServers = map[string][]string{
 	"vps_2_prod": {"https://web-ar.studio/en/", "http://109.248.175.87:5050/api/health", "http://109.248.175.87:8080/authService/helth"},
 	"vps_3_test": {"http://207.154.216.146:3001/authService/helth", "http://207.154.216.146:8081/__health"},
 	"vps_4_prod": {"http://109.248.175.228:5000/api/v1/image-tracking/"},
-	"vps_5_test": {"https://test.web-ar.studio/en/", ""},
+	"vps_5_test": {"https://test.web-ar.studio/en/"},
 	"vps_6_test": {"http://139.59.140.141:5001/api/v1/image-tracking/"},
 
 	// Add more VPS and services as needed
