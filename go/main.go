@@ -1,16 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/robfig/cron/v3"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
-
-	"github.com/gin-gonic/gin"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/robfig/cron/v3"
+	"time"
 )
 
 type ServiceStatus struct {
@@ -20,26 +22,37 @@ type ServiceStatus struct {
 	Error  string `json:"error,omitempty"`
 }
 
-var vpsServers = map[string][]string{
-	"vps_1_test": {"https://project.web-ar.studio/health", "http://109.248.175.153:5050/api/health"},
-	"vps_2_prod": {"https://web-ar.studio/en/", "http://109.248.175.87:5050/api/health", "http://109.248.175.87:8080/authService/helth"},
-	"vps_3_test": {"http://207.154.216.146:3001/authService/helth", "http://207.154.216.146:8081/__health"},
-	"vps_4_prod": {"http://109.248.175.228:5000/api/v1/image-tracking/"},
-	"vps_5_test": {"https://test.web-ar.studio/en/"},
-	"vps_6_test": {"http://139.59.140.141:5001/api/v1/image-tracking/"},
-	"vps_7_test": {"http://167.172.185.148:5050/api/health"},
-	// Add more VPS and services as needed
-}
+var vpsServers map[string][]string
 
 var failedCounts = make(map[string]int)
 var mtx sync.Mutex
 
+func init() {
+	data, err := os.ReadFile("./vps_servers.json")
+	if err != nil {
+		log.Fatalf("Error reading VPS servers file: %v", err)
+	}
+	err = json.Unmarshal(data, &vpsServers)
+	if err != nil {
+		log.Fatalf("Error parsing VPS servers file: %v", err)
+	}
+}
+
 func checkServiceStatus(url string) ServiceStatus {
-	resp, err := http.Get(url)
+
+	// Create a custom HTTP client with a timeout
+	client := http.Client{
+		Timeout: 1 * time.Minute,
+	}
+
+	resp, err := client.Get(url)
 	if err != nil {
 		mtx.Lock()
 		failedCounts[url]++
 		mtx.Unlock()
+		if err, ok := err.(net.Error); ok && err.Timeout() {
+			return ServiceStatus{URL: url, Status: "DOWN", Error: "Request timed out"}
+		}
 		return ServiceStatus{URL: url, Status: "DOWN", Error: "Unable to connect"}
 	}
 	defer resp.Body.Close()
@@ -71,6 +84,8 @@ func main() {
 		log.Panic(err)
 	}
 
+	fmt.Println(vpsServers)
+	
 	c := cron.New()
 	c.AddFunc("@every 1m", func() {
 		for vpsName, services := range vpsServers {
