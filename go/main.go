@@ -84,8 +84,6 @@ func main() {
 		log.Panic(err)
 	}
 
-	fmt.Println(vpsServers)
-	
 	c := cron.New()
 	c.AddFunc("@every 1m", func() {
 		for vpsName, services := range vpsServers {

@@ -10,3 +10,5 @@ services:
     environment:
       TELEGRAM_TOKEN: TELEGRAM_TOKEN
       CHAT_ID: CHAT_ID
+    volumes:
+      - ./vps_servers.json:/root/vps_servers.json
